@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerenciador de Videoaulas</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <button id="btn-tema" class="btn-tema" title="Alternar tema claro/noturno">🌙</button>
+    <h1>🎓 Gerenciador de Videoaulas</h1>
+    <p class="subtitle">Disciplinas → Aulas → Temas</p>
+  </header>
+
+  <main>
+    <nav class="tabs">
+      <button class="tab ativa" data-tab="disciplinas">📚 Minhas Disciplinas</button>
+      <button class="tab" data-tab="cadastros">➕ Cadastros</button>
+      <button class="tab" data-tab="progresso">📊 Progresso</button>
+      <button class="tab" data-tab="armazenamento" id="tab-armazenamento">💾 Armazenamento</button>
+    </nav>
+
+    <!-- ==================== TELA 1: DISCIPLINAS ==================== -->
+    <section id="tela-disciplinas" class="tela ativa">
+      <div class="card">
+        <h2>📋 Minhas Disciplinas</h2>
+        <div id="lista-disciplinas"></div>
+      </div>
+    </section>
+
+    <!-- ==================== TELA 2: CADASTROS ==================== -->
+    <section id="tela-cadastros" class="tela">
+
+      <div class="card">
+        <h2>📥 Importar / Exportar em Massa</h2>
+        <p style="font-size: 0.9rem; color: var(--texto-secundario); margin-bottom: 12px;">
+          Cadastre muitas disciplinas, aulas e temas de uma vez usando uma planilha CSV.
+        </p>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <button id="btn-abrir-import" class="btn-secundario">📥 Importar CSV</button>
+          <button id="btn-exportar-csv" class="btn-sucesso">📤 Exportar CSV</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>📚 Cadastrar Disciplina</h2>
+        <form id="form-disciplina">
+          <input type="text" id="nome-disciplina" placeholder="Nome da disciplina (ex: Matemática)" required>
+          <input type="text" id="professor-disciplina" placeholder="Professor (opcional)">
+          <button type="submit">Adicionar Disciplina</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>🎬 Cadastrar Aula</h2>
+        <form id="form-aula">
+          <select id="select-disciplina-aula" required>
+            <option value="">Selecione a disciplina...</option>
+          </select>
+          <input type="text" id="titulo-aula" placeholder="Título da aula" required>
+          <input type="number" id="duracao-aula" placeholder="Duração (min)" min="0">
+          <button type="submit">Adicionar Aula</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>🏷️ Cadastrar Tema</h2>
+        <form id="form-tema">
+          <select id="select-disciplina-tema" required>
+            <option value="">Selecione a disciplina...</option>
+          </select>
+          <select id="select-aula-tema" required disabled>
+            <option value="">Selecione a aula...</option>
+          </select>
+          <input type="text" id="nome-tema" placeholder="Nome do tema" required>
+          <button type="submit">Adicionar Tema</button>
+        </form>
+        <p style="font-size: 0.8rem; color: var(--texto-secundario); margin-top: 8px;">
+          💡 Adicione links (YouTube, PDF, artigos) depois clicando no botão 🔗 na listagem.
+        </p>
+      </div>
+    </section>
+
+    <!-- ==================== TELA 3: PROGRESSO ==================== -->
+    <section id="tela-progresso" class="tela">
+      <div class="card stats">
+        <h2>📊 Progresso Geral</h2>
+        <div id="estatisticas"></div>
+      </div>
+
+      <div class="card">
+        <h2>⚙️ Ações</h2>
+        <button id="btn-limpar" class="btn-danger">🗑️ Limpar Todos os Dados</button>
+      </div>
+    </section>
+
+    <!-- ==================== TELA 4: ARMAZENAMENTO ==================== -->
+    <section id="tela-armazenamento" class="tela">
+      <div class="card" id="card-armazenamento">
+        <h2>💾 Armazenamento</h2>
+        <div id="storage-info"></div>
+        <div id="storage-acoes"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal do Player do YouTube -->
+  <div id="modal-youtube" class="modal-overlay">
+    <div class="modal-conteudo">
+      <div class="modal-header">
+        <h3 id="modal-titulo">🎬 Player</h3>
+        <div class="modal-acoes">
+          <button id="btn-velocidade" class="btn-velocidade" title="Alterar velocidade">1x</button>
+          <a id="modal-link-externo" href="#" target="_blank" rel="noopener" class="btn-externo">
+            Abrir no YouTube ↗
+          </a>
+          <button id="modal-fechar" class="btn-fechar" title="Fechar (ESC)">✕</button>
+        </div>
+      </div>
+      <div class="modal-player">
+        <div id="player-container"></div>
+      </div>
+      <div class="modal-footer">
+        <span id="modal-status">▶ Assistindo...</span>
+        <label class="modal-check-visto">
+          <input type="checkbox" id="modal-checkbox-visto">
+          Marcar tema como visto
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal do PDF -->
+  <div id="modal-pdf" class="modal-overlay">
+    <div class="modal-conteudo">
+      <div class="modal-header">
+        <h3 id="modal-pdf-titulo">📄 PDF</h3>
+        <div class="modal-acoes">
+          <a id="modal-pdf-link-externo" href="#" target="_blank" rel="noopener" class="btn-externo">
+            Abrir no Drive ↗
+          </a>
+          <button id="modal-pdf-fechar" class="btn-fechar" title="Fechar (ESC)">✕</button>
+        </div>
+      </div>
+      <div class="modal-player">
+        <div id="pdf-container"></div>
+      </div>
+      <div class="modal-footer">
+        <span id="modal-pdf-status">📄 Visualizando PDF</span>
+        <label class="modal-check-visto">
+          <input type="checkbox" id="modal-pdf-checkbox-visto">
+          Marcar tema como visto
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Importação CSV -->
+  <div id="modal-import" class="modal-overlay">
+    <div class="modal-conteudo" style="max-width: 800px;">
+      <div class="modal-header">
+        <h3>📥 Importar CSV</h3>
+        <button id="modal-import-fechar" class="btn-fechar" title="Fechar (ESC)">✕</button>
+      </div>
+
+      <div class="modal-body" style="padding: 20px; background: var(--fundo-card); max-height: 70vh; overflow-y: auto;">
+
+        <div class="import-secao">
+          <h4 style="margin-bottom: 10px; color: var(--azul-escuro);">1. Escolha o arquivo</h4>
+          <input type="file" id="import-arquivo" accept=".csv,.txt" style="padding: 10px; width: 100%; background: var(--fundo-card); color: var(--texto-principal); border: 2px solid var(--borda-suave); border-radius: 8px;">
+        </div>
+
+        <div class="import-secao" style="margin-top: 20px;">
+          <h4 style="margin-bottom: 10px; color: var(--azul-escuro);">...ou cole o conteúdo</h4>
+          <textarea
+            id="import-texto"
+            placeholder="disciplina,professor,aula,tema,links,anotacao&#10;Banco de Dados,Luciano,fundamentos,Conceitos básicos,,&#10;Banco de Dados,Luciano,fundamentos,Complementar - Vídeo SELECT,Aula intro|https://youtube.com/watch?v=abc123,,"
+            style="width: 100%; min-height: 120px; padding: 12px; border: 2px solid var(--borda-suave); border-radius: 8px; font-family: monospace; font-size: 0.85rem; background: var(--fundo-card); color: var(--texto-principal); resize: vertical;"
+          ></textarea>
+        </div>
+
+        <div class="import-secao" style="margin-top: 20px;">
+          <h4 style="margin-bottom: 10px; color: var(--azul-escuro);">2. Como importar?</h4>
+          <label style="display: flex; align-items: center; gap: 10px; padding: 12px; border: 2px solid var(--borda-suave); border-radius: 8px; cursor: pointer; margin-bottom: 8px; background: var(--fundo-card);">
+            <input type="radio" name="modo-import" value="adicionar" checked>
+            <div>
+              <strong>➕ Adicionar aos dados existentes</strong>
+              <p style="font-size: 0.85rem; color: var(--texto-secundario); margin: 4px 0 0;">
+                Mantém tudo que já está cadastrado e adiciona o novo conteúdo
+              </p>
+            </div>
+          </label>
+          <label style="display: flex; align-items: center; gap: 10px; padding: 12px; border: 2px solid var(--borda-suave); border-radius: 8px; cursor: pointer; background: var(--fundo-card);">
+            <input type="radio" name="modo-import" value="substituir">
+            <div>
+              <strong>🗑️ Substituir tudo</strong>
+              <p style="font-size: 0.85rem; color: var(--texto-secundario); margin: 4px 0 0;">
+                ⚠️ Apaga todos os dados atuais e importa apenas o novo conteúdo
+              </p>
+            </div>
+          </label>
+        </div>
+
+        <div class="import-secao" style="margin-top: 20px;">
+          <h4 style="margin-bottom: 10px; color: var(--azul-escuro);">3. Pré-visualizar</h4>
+          <button id="btn-preview-import" style="width: 100%;">👁️ Analisar conteúdo</button>
+          <div id="import-preview" style="margin-top: 12px;"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="justify-content: flex-end; gap: 10px;">
+        <button id="modal-import-cancelar" class="btn-secundario">Cancelar</button>
+        <button id="btn-confirmar-import" class="btn-sucesso" disabled>✅ Confirmar Importação</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Anotação -->
+  <div id="modal-anotacao" class="modal-overlay">
+    <div class="modal-conteudo" style="max-width: 700px;">
+      <div class="modal-header">
+        <h3 id="modal-anotacao-titulo">📝 Anotação</h3>
+        <button id="modal-anotacao-fechar" class="btn-fechar" title="Fechar (ESC)">✕</button>
+      </div>
+
+      <div style="padding: 20px; background: var(--fundo-card);">
+        <p id="modal-anotacao-contexto" style="font-size: 0.85rem; color: var(--texto-secundario); margin-bottom: 12px;"></p>
+
+        <textarea
+          id="modal-anotacao-texto"
+          placeholder="Escreva sua anotação aqui...&#10;&#10;Exemplos:&#10;- Pontos importantes da aula&#10;- Dúvidas para levar ao professor&#10;- Páginas do livro para revisar"
+          style="width: 100%; min-height: 260px; padding: 14px; border: 2px solid var(--borda-suave); border-radius: 8px; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 0.95rem; background: var(--fundo-card); color: var(--texto-principal); resize: vertical; line-height: 1.5;"
+        ></textarea>
+
+        <p id="modal-anotacao-rodape" style="font-size: 0.75rem; color: var(--texto-secundario); margin-top: 10px; text-align: right;"></p>
+      </div>
+
+      <div class="modal-footer" style="justify-content: space-between; background: var(--azul-escuro);">
+        <span style="color: #E2E8F0; font-size: 0.85rem;">💡 Fecha e salva automaticamente</span>
+        <button id="modal-anotacao-limpar" class="btn-secundario" style="background: var(--vermelho);">🗑️ Limpar anotação</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Gerenciar Links -->
+  <div id="modal-links" class="modal-overlay">
+    <div class="modal-conteudo" style="max-width: 750px;">
+      <div class="modal-header">
+        <h3 id="modal-links-titulo">🔗 Links</h3>
+        <button id="modal-links-fechar" class="btn-fechar" title="Fechar (ESC)">✕</button>
+      </div>
+
+      <div class="modal-body" style="padding: 20px; background: var(--fundo-card); max-height: 70vh; overflow-y: auto;">
+        <p id="modal-links-contexto" style="font-size: 0.85rem; color: var(--texto-secundario); margin-bottom: 16px;"></p>
+
+        <div id="modal-links-lista"></div>
+
+        <div style="margin-top: 24px; padding-top: 20px; border-top: 2px dashed var(--borda-suave);">
+          <h4 style="color: var(--azul-escuro); font-size: 0.95rem; margin-bottom: 12px;">➕ Adicionar novo link</h4>
+          
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <input
+              type="text"
+              id="novo-link-titulo"
+              placeholder="Título (opcional) — ex: Aula introdutória"
+              style="width: 100%; padding: 11px 14px; border: 2px solid var(--borda-suave); border-radius: 8px; font-size: 0.95rem; background: var(--fundo-card); color: var(--texto-principal);"
+            >
+            <input
+              type="url"
+              id="novo-link-url"
+              placeholder="Link (YouTube, PDF do Drive, ou outro)"
+              style="width: 100%; padding: 11px 14px; border: 2px solid var(--borda-suave); border-radius: 8px; font-size: 0.95rem; background: var(--fundo-card); color: var(--texto-principal);"
+            >
+            <div id="novo-link-tipo" style="font-size: 0.8rem; color: var(--texto-secundario); min-height: 18px;">Aguardando link...</div>
+            <button id="btn-adicionar-link" class="btn-sucesso">➕ Adicionar Link</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
