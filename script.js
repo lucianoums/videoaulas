@@ -118,7 +118,6 @@ function migrarDados(dados) {
       aula.links = migrarLinks(aula.links);
 
       aula.temas = (aula.temas || []).map(tema => {
-        // Migra formato antigo (tema.link único) para novo (tema.links[])
         if (tema.link && (!Array.isArray(tema.links) || tema.links.length === 0)) {
           tema.links = [{
             id: crypto.randomUUID(),
@@ -993,7 +992,7 @@ function criarPlayerYoutube(videoId, startSegundos) {
   intervaloSalvarProgresso = setInterval(salvarProgressoAtual, 5000);
 }
 
-// ✅ Vídeo NÃO marca o tema automaticamente — links são material de apoio
+// ✅ Vídeo NÃO marca o tema automaticamente
 function onPlayerStateChange(event) {
   const statusEl = document.getElementById('modal-status');
   if (event.data === YT.PlayerState.PLAYING) {
@@ -1281,7 +1280,7 @@ document.getElementById('modal-links').addEventListener('click', e => {
   if (e.target.id === 'modal-links') fecharModalLinks();
 });
 
-// ✅ Checkbox individual de cada LINK (marca o link como visto)
+// ✅ Checkbox individual de cada LINK (independente do tema)
 document.getElementById('modal-links-lista').addEventListener('change', async e => {
   const checkbox = e.target.closest('.link-checkbox-visto');
   if (!checkbox) return;
