@@ -927,6 +927,26 @@ body.tema-noturno .modal-footer {
   accent-color: var(--verde);
 }
 
+/* ===== TELA CHEIA "FAKE" do PDF ===== */
+/* Usa CSS puro — funciona em qualquer ambiente (iframe, mobile, etc) */
+.modal-overlay#modal-pdf.pdf-expandido {
+  padding: 0;
+  background: #000;
+}
+
+.modal-overlay#modal-pdf.pdf-expandido .modal-conteudo {
+  max-width: 100%;
+  width: 100%;
+  height: 100vh;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.modal-overlay#modal-pdf.pdf-expandido .modal-player {
+  flex: 1;
+  aspect-ratio: auto;
+}
+
 /* ===== Importação CSV ===== */
 #import-texto:focus,
 #import-arquivo:focus {
@@ -1205,72 +1225,6 @@ body.tema-noturno .link-item {
   outline: none;
   border-color: var(--azul-principal);
   box-shadow: 0 0 0 3px var(--azul-claro);
-}
-
-/* ===== Tela cheia do PDF ===== */
-.modal-overlay:fullscreen {
-  background: #000;
-  padding: 0;
-  border-radius: 0;
-  width: 100vw;
-  height: 100vh;
-}
-
-.modal-overlay:fullscreen .modal-conteudo {
-  max-width: 100%;
-  width: 100%;
-  height: 100%;
-  border-radius: 0;
-}
-
-.modal-overlay:fullscreen .modal-player {
-  flex: 1;
-  aspect-ratio: auto;
-}
-
-.modal-overlay:fullscreen .modal-header,
-.modal-overlay:fullscreen .modal-footer {
-  flex-shrink: 0;
-}
-
-/* Firefox */
-.modal-overlay:-moz-full-screen {
-  background: #000;
-  padding: 0;
-  width: 100vw;
-  height: 100vh;
-}
-
-.modal-overlay:-moz-full-screen .modal-conteudo {
-  max-width: 100%;
-  width: 100%;
-  height: 100%;
-  border-radius: 0;
-}
-
-.modal-overlay:-moz-full-screen .modal-player {
-  flex: 1;
-  aspect-ratio: auto;
-}
-
-/* WebKit (Safari) */
-.modal-overlay:-webkit-full-screen {
-  background: #000;
-  padding: 0;
-  width: 100vw;
-  height: 100vh;
-}
-
-.modal-overlay:-webkit-full-screen .modal-conteudo {
-  max-width: 100%;
-  width: 100%;
-  height: 100%;
-  border-radius: 0;
-}
-
-.modal-overlay:-webkit-full-screen .modal-player {
-  flex: 1;
-  aspect-ratio: auto;
 }
 
 /* ===== Loading ===== */

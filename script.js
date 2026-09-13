@@ -1047,6 +1047,7 @@ function abrirPdfDrive(fileId, linkObj, contexto) {
   const tituloEl = document.getElementById('modal-pdf-titulo');
   const linkExterno = document.getElementById('modal-pdf-link-externo');
   const checkVisto = document.getElementById('modal-pdf-checkbox-visto');
+  const btnFullscreen = document.getElementById('btn-pdf-fullscreen');
 
   temaAtual = contexto;
 
@@ -1056,6 +1057,13 @@ function abrirPdfDrive(fileId, linkObj, contexto) {
 
   const { tema } = contexto ? localizarTema(contexto.discId, contexto.aulaId, contexto.temaId) : {};
   checkVisto.checked = tema ? !!tema.visto : false;
+
+  // Reset do estado de tela cheia
+  modal.classList.remove('pdf-expandido');
+  if (btnFullscreen) {
+    btnFullscreen.textContent = '⛶';
+    btnFullscreen.title = 'Tela cheia';
+  }
 
   container.innerHTML = `
     <iframe
@@ -1073,14 +1081,13 @@ function abrirPdfDrive(fileId, linkObj, contexto) {
 function fecharPdfDrive() {
   const modal = document.getElementById('modal-pdf');
   const container = document.getElementById('pdf-container');
+  const btnFullscreen = document.getElementById('btn-pdf-fullscreen');
 
-  // Sai do fullscreen se estiver ativo
-  const estaEmFullscreen = document.fullscreenElement ||
-    document.webkitFullscreenElement ||
-    document.mozFullScreenElement;
-
-  if (estaEmFullscreen) {
-    sairFullscreenPdf();
+  // Sai do estado de tela cheia
+  modal.classList.remove('pdf-expandido');
+  if (btnFullscreen) {
+    btnFullscreen.textContent = '⛶';
+    btnFullscreen.title = 'Tela cheia';
   }
 
   container.innerHTML = '';
@@ -1090,60 +1097,16 @@ function fecharPdfDrive() {
 }
 
 // ============================================================
-// FULLSCREEN DO PDF
+// TELA CHEIA "FAKE" do PDF
 // ============================================================
-function entrarFullscreenPdf() {
-  const modalPdf = document.getElementById('modal-pdf');
-  if (!modalPdf) return;
-
-  if (modalPdf.requestFullscreen) {
-    modalPdf.requestFullscreen().catch(err => {
-      console.warn('Erro ao entrar em fullscreen:', err);
-    });
-  } else if (modalPdf.webkitRequestFullscreen) {
-    modalPdf.webkitRequestFullscreen();
-  } else if (modalPdf.mozRequestFullScreen) {
-    modalPdf.mozRequestFullScreen();
-  } else {
-    alert('Seu navegador não suporta tela cheia.');
-  }
-}
-
-function sairFullscreenPdf() {
-  if (document.exitFullscreen) {
-    document.exitFullscreen().catch(() => {});
-  } else if (document.webkitExitFullscreen) {
-    document.webkitExitFullscreen();
-  } else if (document.mozCancelFullScreen) {
-    document.mozCancelFullScreen();
-  }
-}
-
 function toggleFullscreenPdf() {
-  const estaEmFullscreen = document.fullscreenElement ||
-    document.webkitFullscreenElement ||
-    document.mozFullScreenElement;
-
-  if (estaEmFullscreen) {
-    sairFullscreenPdf();
-  } else {
-    entrarFullscreenPdf();
-  }
-}
-
-document.addEventListener('fullscreenchange', atualizarIconeFullscreenPdf);
-document.addEventListener('webkitfullscreenchange', atualizarIconeFullscreenPdf);
-document.addEventListener('mozfullscreenchange', atualizarIconeFullscreenPdf);
-
-function atualizarIconeFullscreenPdf() {
+  const modal = document.getElementById('modal-pdf');
   const btn = document.getElementById('btn-pdf-fullscreen');
-  if (!btn) return;
+  if (!modal || !btn) return;
 
-  const estaEmFullscreen = document.fullscreenElement ||
-    document.webkitFullscreenElement ||
-    document.mozFullScreenElement;
+  const estaExpandido = modal.classList.toggle('pdf-expandido');
 
-  if (estaEmFullscreen) {
+  if (estaExpandido) {
     btn.textContent = '🗗';
     btn.title = 'Sair da tela cheia';
   } else {
