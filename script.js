@@ -701,9 +701,7 @@ function renderEstatisticas() {
     <div class="stat-item"><div class="stat-valor">${totalLinks}</div><div class="stat-label">Links</div></div>
     <div class="stat-item"><div class="stat-valor">${pct}%</div><div class="stat-label">Progresso</div></div>
   `;
-}
-
-// ============================================================
+}// ============================================================
 // EVENTOS: FORMULÁRIOS
 // ============================================================
 document.getElementById('form-disciplina').addEventListener('submit', async e => {
@@ -992,7 +990,6 @@ function criarPlayerYoutube(videoId, startSegundos) {
   intervaloSalvarProgresso = setInterval(salvarProgressoAtual, 5000);
 }
 
-// ✅ Vídeo NÃO marca o tema automaticamente
 function onPlayerStateChange(event) {
   const statusEl = document.getElementById('modal-status');
   if (event.data === YT.PlayerState.PLAYING) {
@@ -1076,11 +1073,86 @@ function abrirPdfDrive(fileId, linkObj, contexto) {
 function fecharPdfDrive() {
   const modal = document.getElementById('modal-pdf');
   const container = document.getElementById('pdf-container');
+
+  // Sai do fullscreen se estiver ativo
+  const estaEmFullscreen = document.fullscreenElement ||
+    document.webkitFullscreenElement ||
+    document.mozFullScreenElement;
+
+  if (estaEmFullscreen) {
+    sairFullscreenPdf();
+  }
+
   container.innerHTML = '';
   modal.classList.remove('ativo');
   temaAtual = null;
   render();
 }
+
+// ============================================================
+// FULLSCREEN DO PDF
+// ============================================================
+function entrarFullscreenPdf() {
+  const modalPdf = document.getElementById('modal-pdf');
+  if (!modalPdf) return;
+
+  if (modalPdf.requestFullscreen) {
+    modalPdf.requestFullscreen().catch(err => {
+      console.warn('Erro ao entrar em fullscreen:', err);
+    });
+  } else if (modalPdf.webkitRequestFullscreen) {
+    modalPdf.webkitRequestFullscreen();
+  } else if (modalPdf.mozRequestFullScreen) {
+    modalPdf.mozRequestFullScreen();
+  } else {
+    alert('Seu navegador não suporta tela cheia.');
+  }
+}
+
+function sairFullscreenPdf() {
+  if (document.exitFullscreen) {
+    document.exitFullscreen().catch(() => {});
+  } else if (document.webkitExitFullscreen) {
+    document.webkitExitFullscreen();
+  } else if (document.mozCancelFullScreen) {
+    document.mozCancelFullScreen();
+  }
+}
+
+function toggleFullscreenPdf() {
+  const estaEmFullscreen = document.fullscreenElement ||
+    document.webkitFullscreenElement ||
+    document.mozFullScreenElement;
+
+  if (estaEmFullscreen) {
+    sairFullscreenPdf();
+  } else {
+    entrarFullscreenPdf();
+  }
+}
+
+document.addEventListener('fullscreenchange', atualizarIconeFullscreenPdf);
+document.addEventListener('webkitfullscreenchange', atualizarIconeFullscreenPdf);
+document.addEventListener('mozfullscreenchange', atualizarIconeFullscreenPdf);
+
+function atualizarIconeFullscreenPdf() {
+  const btn = document.getElementById('btn-pdf-fullscreen');
+  if (!btn) return;
+
+  const estaEmFullscreen = document.fullscreenElement ||
+    document.webkitFullscreenElement ||
+    document.mozFullScreenElement;
+
+  if (estaEmFullscreen) {
+    btn.textContent = '🗗';
+    btn.title = 'Sair da tela cheia';
+  } else {
+    btn.textContent = '⛶';
+    btn.title = 'Tela cheia';
+  }
+}
+
+document.getElementById('btn-pdf-fullscreen').addEventListener('click', toggleFullscreenPdf);
 
 // ============================================================
 // ANOTAÇÃO
@@ -1280,7 +1352,6 @@ document.getElementById('modal-links').addEventListener('click', e => {
   if (e.target.id === 'modal-links') fecharModalLinks();
 });
 
-// ✅ Checkbox individual de cada LINK (independente do tema)
 document.getElementById('modal-links-lista').addEventListener('change', async e => {
   const checkbox = e.target.closest('.link-checkbox-visto');
   if (!checkbox) return;
