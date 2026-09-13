@@ -927,16 +927,6 @@ body.tema-noturno .modal-footer {
   accent-color: var(--verde);
 }
 
-/* ===== Checkbox de visto dentro do modal de links ===== */
-#modal-links-checkbox-area .modal-check-visto {
-  font-size: 0.95rem;
-}
-
-body.tema-noturno #modal-links-checkbox-area .modal-check-visto {
-  background: #064E3B !important;
-  border-left-color: var(--verde) !important;
-}
-
 /* ===== Importação CSV ===== */
 #import-texto:focus,
 #import-arquivo:focus {
@@ -1127,7 +1117,7 @@ body.tema-noturno .btn-link .badge-count {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  transition: background 0.2s;
+  transition: background 0.2s, opacity 0.2s;
 }
 
 body.tema-noturno .link-item {
@@ -1138,6 +1128,23 @@ body.tema-noturno .link-item {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.link-checkbox-visto {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--verde);
+  flex-shrink: 0;
+}
+
+.link-item.visto {
+  opacity: 0.65;
+}
+
+.link-item.visto .link-item-titulo {
+  text-decoration: line-through;
+  color: var(--texto-secundario);
 }
 
 .link-item-titulo {
@@ -1153,13 +1160,14 @@ body.tema-noturno .link-item {
   color: var(--texto-secundario);
   word-break: break-all;
   font-family: monospace;
-  padding: 4px 0;
+  padding: 4px 0 4px 26px;
 }
 
 .link-item-acoes {
   display: flex;
   gap: 6px;
   margin-top: 4px;
+  padding-left: 26px;
 }
 
 .link-item-acoes button {

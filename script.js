@@ -101,25 +101,35 @@ function dbDelete(store, chave) {
 function migrarDados(dados) {
   if (!Array.isArray(dados)) return [];
 
+  const migrarLinks = (links) => {
+    if (!Array.isArray(links)) return [];
+    return links.map(l => ({
+      id: l.id || crypto.randomUUID(),
+      url: l.url || '',
+      titulo: l.titulo || '',
+      visto: l.visto === true
+    }));
+  };
+
   return dados.map(disc => {
-    if (!Array.isArray(disc.links)) disc.links = [];
+    disc.links = migrarLinks(disc.links);
 
     disc.aulas = (disc.aulas || []).map(aula => {
-      if (!Array.isArray(aula.links)) aula.links = [];
+      aula.links = migrarLinks(aula.links);
 
       aula.temas = (aula.temas || []).map(tema => {
-        if (!Array.isArray(tema.links)) {
-          tema.links = [];
-          if (tema.link && tema.link.trim() !== '') {
-            tema.links.push({
-              id: crypto.randomUUID(),
-              url: tema.link,
-              titulo: ''
-            });
-          }
+        // Migra formato antigo (tema.link único) para novo (tema.links[])
+        if (tema.link && (!Array.isArray(tema.links) || tema.links.length === 0)) {
+          tema.links = [{
+            id: crypto.randomUUID(),
+            url: tema.link,
+            titulo: '',
+            visto: false
+          }];
           delete tema.link;
           delete tema.tipo;
         }
+        tema.links = migrarLinks(tema.links);
         return tema;
       });
 
@@ -983,7 +993,7 @@ function criarPlayerYoutube(videoId, startSegundos) {
   intervaloSalvarProgresso = setInterval(salvarProgressoAtual, 5000);
 }
 
-// ✅ ALTERAÇÃO: não marca mais o tema automaticamente ao terminar o vídeo
+// ✅ Vídeo NÃO marca o tema automaticamente — links são material de apoio
 function onPlayerStateChange(event) {
   const statusEl = document.getElementById('modal-status');
   if (event.data === YT.PlayerState.PLAYING) {
@@ -991,13 +1001,9 @@ function onPlayerStateChange(event) {
   } else if (event.data === YT.PlayerState.PAUSED) {
     statusEl.textContent = '⏸ Pausado';
   } else if (event.data === YT.PlayerState.ENDED) {
-    // ✅ Vídeo concluído — o tema NÃO é marcado automaticamente.
-    // Os links são materiais de apoio. O usuário decide quando marcar.
     statusEl.textContent = '✅ Vídeo concluído';
   }
 }
-
-// (Função marcarTemaComoVistoAoTerminar foi removida — não é mais usada)
 
 async function salvarProgressoAtual() {
   if (!playerAtual || !temaAtual) return;
@@ -1149,8 +1155,6 @@ function abrirModalLinks(tipo, discId, aulaId, temaId) {
   const modal = document.getElementById('modal-links');
   const tituloEl = document.getElementById('modal-links-titulo');
   const contextoEl = document.getElementById('modal-links-contexto');
-  const checkboxArea = document.getElementById('modal-links-checkbox-area');
-  const checkbox = document.getElementById('modal-links-checkbox-visto');
 
   let nome = '';
   let contexto = '';
@@ -1176,16 +1180,6 @@ function abrirModalLinks(tipo, discId, aulaId, temaId) {
 
   tituloEl.textContent = `🔗 Links — ${nome}`;
   contextoEl.textContent = contexto;
-
-  // ✅ Mostra a checkbox SÓ quando é tema
-  if (tipo === 'tema') {
-    const { tema } = localizarTema(discId, aulaId, temaId);
-    checkbox.checked = tema ? !!tema.visto : false;
-    checkboxArea.style.display = 'block';
-  } else {
-    checkboxArea.style.display = 'none';
-    checkbox.checked = false;
-  }
 
   renderLinksModal();
 
@@ -1227,7 +1221,7 @@ function renderLinksModal() {
     return;
   }
 
-  container.innerHTML = links.map((link, idx) => {
+  container.innerHTML = links.map((link) => {
     const tipoLink = detectarTipoLink(link.url);
 
     let iconeTipo = '🔗';
@@ -1245,9 +1239,16 @@ function renderLinksModal() {
       ? link.titulo
       : (tipoLink === 'youtube' ? 'Vídeo do YouTube' : tipoLink === 'pdf-drive' ? 'PDF do Drive' : 'Link');
 
+    const visto = link.visto === true;
+
     return `
-      <div class="link-item">
+      <div class="link-item ${visto ? 'visto' : ''}">
         <div class="link-item-header">
+          <input type="checkbox"
+                 class="link-checkbox-visto"
+                 data-link-visto-id="${link.id}"
+                 ${visto ? 'checked' : ''}
+                 title="Marcar este link como visto">
           <span style="font-size: 1.1rem;">${iconeTipo}</span>
           <span class="link-item-titulo">${escapeHtml(tituloMostrar)}</span>
         </div>
@@ -1280,19 +1281,22 @@ document.getElementById('modal-links').addEventListener('click', e => {
   if (e.target.id === 'modal-links') fecharModalLinks();
 });
 
-// ✅ Checkbox "Marcar tema como visto" dentro do modal de links
-document.getElementById('modal-links-checkbox-visto').addEventListener('change', async e => {
-  if (!linksModalInfo || linksModalInfo.tipo !== 'tema') return;
+// ✅ Checkbox individual de cada LINK (marca o link como visto)
+document.getElementById('modal-links-lista').addEventListener('change', async e => {
+  const checkbox = e.target.closest('.link-checkbox-visto');
+  if (!checkbox) return;
 
-  const { discId, aulaId, temaId } = linksModalInfo;
-  const { tema } = localizarTema(discId, aulaId, temaId);
-  if (!tema) return;
+  const linkId = checkbox.dataset.linkVistoId;
+  if (!linkId) return;
 
-  tema.visto = e.target.checked;
+  const links = getLinksDoItem(linksModalInfo);
+  const link = links.find(l => l.id === linkId);
+  if (!link) return;
+
+  link.visto = checkbox.checked;
 
   await salvar();
-  renderListaDisciplinas();
-  renderEstatisticas();
+  renderLinksModal();
 });
 
 document.getElementById('novo-link-url').addEventListener('input', e => {
@@ -1329,7 +1333,12 @@ document.getElementById('btn-adicionar-link').addEventListener('click', async ()
     return;
   }
 
-  const novoLink = { id: crypto.randomUUID(), url, titulo };
+  const novoLink = {
+    id: crypto.randomUUID(),
+    url,
+    titulo,
+    visto: false
+  };
 
   const { tipo, discId, aulaId, temaId } = linksModalInfo;
 
@@ -1741,9 +1750,9 @@ function parseLinks(str) {
     if (!p) return null;
     const [titulo, url] = p.split('|').map(x => (x || '').trim());
     if (!url) {
-      return { id: crypto.randomUUID(), url: p, titulo: '' };
+      return { id: crypto.randomUUID(), url: p, titulo: '', visto: false };
     }
-    return { id: crypto.randomUUID(), url, titulo };
+    return { id: crypto.randomUUID(), url, titulo, visto: false };
   }).filter(Boolean);
 }
 
