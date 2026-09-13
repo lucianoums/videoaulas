@@ -426,7 +426,6 @@ body.tema-noturno .status-badge.laranja {
   min-width: 180px;
 }
 
-/* ===== Disciplina ===== */
 .disciplina {
   border: 2px solid var(--borda-suave);
   border-radius: 10px;
@@ -494,7 +493,6 @@ body.tema-noturno .status-badge.laranja {
   border-radius: 4px;
 }
 
-/* ===== Aula ===== */
 .aula {
   border-left: 4px solid var(--azul-principal);
   background: var(--fundo-aula);
@@ -595,7 +593,6 @@ body.tema-noturno .status-badge.laranja {
   color: var(--azul-escuro);
 }
 
-/* ===== Tema ===== */
 .tema {
   display: flex;
   align-items: center;
@@ -727,7 +724,6 @@ body.tema-noturno .btn-link-externo {
   font-size: 0.9rem;
 }
 
-/* ===== Estatísticas ===== */
 .stats {
   text-align: center;
 }
@@ -756,7 +752,6 @@ body.tema-noturno .btn-link-externo {
   color: var(--texto-secundario);
 }
 
-/* ===== Modais ===== */
 .modal-overlay {
   display: none;
   position: fixed;
@@ -930,6 +925,16 @@ body.tema-noturno .modal-footer {
   height: 16px;
   cursor: pointer;
   accent-color: var(--verde);
+}
+
+/* ===== Checkbox de visto dentro do modal de links ===== */
+#modal-links-checkbox-area .modal-check-visto {
+  font-size: 0.95rem;
+}
+
+body.tema-noturno #modal-links-checkbox-area .modal-check-visto {
+  background: #064E3B !important;
+  border-left-color: var(--verde) !important;
 }
 
 /* ===== Importação CSV ===== */

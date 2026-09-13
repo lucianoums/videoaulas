@@ -874,7 +874,6 @@ function abrirPlayerYoutube(videoId, linkObj, contexto) {
 
   const startSegundos = (tema && tema.progresso) ? Math.floor(tema.progresso.segundos) : 0;
 
-  // Destrói player antigo antes de criar um novo
   if (playerAtual) {
     try { playerAtual.destroy(); } catch (e) {}
     playerAtual = null;
@@ -888,7 +887,6 @@ function abrirPlayerYoutube(videoId, linkObj, contexto) {
   container.innerHTML = '<div id="yt-player"></div>';
   modal.classList.add('ativo');
 
-  // Garante que o DOM está pronto antes de criar o player
   const criarQuandoPronto = () => {
     if (typeof YT === 'undefined' || !YT.Player) {
       carregarApiYoutube(() => criarPlayerYoutube(videoId, startSegundos));
@@ -924,7 +922,6 @@ function carregarApiYoutube(callback) {
   };
 }
 
-// ⭐ FUNÇÃO CORRIGIDA — sem origin fixo, evita erro postMessage
 function criarPlayerYoutube(videoId, startSegundos) {
   const container = document.getElementById('yt-player');
   if (!container) {
@@ -932,15 +929,11 @@ function criarPlayerYoutube(videoId, startSegundos) {
     return;
   }
 
-  // Destrói instância anterior se existir
   if (playerAtual) {
     try { playerAtual.destroy(); } catch (e) {}
     playerAtual = null;
   }
 
-  // Detecta a origem REAL da página
-  // - Em file:/// o origin é "null" (string) — não passa nada
-  // - Em http:// ou https:// passa a URL real
   const originReal = window.location.origin;
   const temOriginValida = originReal && originReal !== 'null' && originReal !== 'file://';
 
@@ -953,15 +946,13 @@ function criarPlayerYoutube(videoId, startSegundos) {
     enablejsapi: 1
   };
 
-  // Só passa origin se for válida (evita erro de postMessage em file://)
   if (temOriginValida) {
     playerVars.origin = originReal;
   }
 
   console.log('🎬 Criando player YouTube:', {
     videoId,
-    origem: temOriginValida ? originReal : '(file:// — sem origin)',
-    playerVars
+    origem: temOriginValida ? originReal : '(file:// — sem origin)'
   });
 
   playerAtual = new YT.Player('yt-player', {
@@ -992,6 +983,7 @@ function criarPlayerYoutube(videoId, startSegundos) {
   intervaloSalvarProgresso = setInterval(salvarProgressoAtual, 5000);
 }
 
+// ✅ ALTERAÇÃO: não marca mais o tema automaticamente ao terminar o vídeo
 function onPlayerStateChange(event) {
   const statusEl = document.getElementById('modal-status');
   if (event.data === YT.PlayerState.PLAYING) {
@@ -999,21 +991,13 @@ function onPlayerStateChange(event) {
   } else if (event.data === YT.PlayerState.PAUSED) {
     statusEl.textContent = '⏸ Pausado';
   } else if (event.data === YT.PlayerState.ENDED) {
+    // ✅ Vídeo concluído — o tema NÃO é marcado automaticamente.
+    // Os links são materiais de apoio. O usuário decide quando marcar.
     statusEl.textContent = '✅ Vídeo concluído';
-    marcarTemaComoVistoAoTerminar();
   }
 }
 
-async function marcarTemaComoVistoAoTerminar() {
-  if (!temaAtual) return;
-  const { tema } = localizarTema(temaAtual.discId, temaAtual.aulaId, temaAtual.temaId);
-  if (!tema) return;
-  tema.visto = true;
-  tema.progresso = null;
-  document.getElementById('modal-checkbox-visto').checked = true;
-  await salvar();
-  render();
-}
+// (Função marcarTemaComoVistoAoTerminar foi removida — não é mais usada)
 
 async function salvarProgressoAtual() {
   if (!playerAtual || !temaAtual) return;
@@ -1165,6 +1149,8 @@ function abrirModalLinks(tipo, discId, aulaId, temaId) {
   const modal = document.getElementById('modal-links');
   const tituloEl = document.getElementById('modal-links-titulo');
   const contextoEl = document.getElementById('modal-links-contexto');
+  const checkboxArea = document.getElementById('modal-links-checkbox-area');
+  const checkbox = document.getElementById('modal-links-checkbox-visto');
 
   let nome = '';
   let contexto = '';
@@ -1190,6 +1176,16 @@ function abrirModalLinks(tipo, discId, aulaId, temaId) {
 
   tituloEl.textContent = `🔗 Links — ${nome}`;
   contextoEl.textContent = contexto;
+
+  // ✅ Mostra a checkbox SÓ quando é tema
+  if (tipo === 'tema') {
+    const { tema } = localizarTema(discId, aulaId, temaId);
+    checkbox.checked = tema ? !!tema.visto : false;
+    checkboxArea.style.display = 'block';
+  } else {
+    checkboxArea.style.display = 'none';
+    checkbox.checked = false;
+  }
 
   renderLinksModal();
 
@@ -1282,6 +1278,21 @@ function fecharModalLinks() {
 document.getElementById('modal-links-fechar').addEventListener('click', fecharModalLinks);
 document.getElementById('modal-links').addEventListener('click', e => {
   if (e.target.id === 'modal-links') fecharModalLinks();
+});
+
+// ✅ Checkbox "Marcar tema como visto" dentro do modal de links
+document.getElementById('modal-links-checkbox-visto').addEventListener('change', async e => {
+  if (!linksModalInfo || linksModalInfo.tipo !== 'tema') return;
+
+  const { discId, aulaId, temaId } = linksModalInfo;
+  const { tema } = localizarTema(discId, aulaId, temaId);
+  if (!tema) return;
+
+  tema.visto = e.target.checked;
+
+  await salvar();
+  renderListaDisciplinas();
+  renderEstatisticas();
 });
 
 document.getElementById('novo-link-url').addEventListener('input', e => {
